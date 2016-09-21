@@ -10,8 +10,8 @@ var config = JSON.parse(
 let endpoint = "frc-api.firstinspires.org/v2.0/2016/teams";
 
 
-const user = "techplexengineerT5122";
-const pass = config.keys.FRCAPI;
+const user = config.keys.FRCAPI.user;
+const pass = config.keys.FRCAPI.pass;
 
 // let resp = request.get(endpoint);//.auth(user, pass);
 // resp.on('response', function(response) {
@@ -45,8 +45,7 @@ function getData(page=1) {
 				return;
 			}
 			resolve(data);
-			console.log('pageCurrent', data.pageCurrent);
-			console.log('pageTotal', data.pageTotal);
+			console.log('Processing page %d of %d', data.pageCurrent, data.pageTotal);
 		});
 	});
 }
@@ -55,13 +54,11 @@ function getTeamsRecursive(page=1, records=[]) {
 	return getData(page)
 	.then(function onFulfilled(data) {
 		page++;
-		records.push(data.teams);
+		records = records.concat(data.teams);
 		if (page <= data.pageTotal) {
 			return getTeamsRecursive(page, records)
 		}
 		return records;
-
-		console.log(data);
 	}, function onRejected(error) {
 		console.log("ERROR", error);
 	});
@@ -69,7 +66,9 @@ function getTeamsRecursive(page=1, records=[]) {
 
 
 getTeamsRecursive().then(function onFulfilled(data) {
-	console.log(data);
+	fs.writeFile('data.json', JSON.stringify(data, null, '\t'), function(err){
+		if (err) console.log(err);
+	})
 }, function onRejected(error) {
 	console.log("ERROR", error);
 });
